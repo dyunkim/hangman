@@ -186,13 +186,26 @@ defmodule Hangman.Game do
 
   @spec make_move(state, ch) :: { state, atom, optional_ch }
   def make_move(state, guess) do
-    word = state.word
+    word = String.codepoints(state.word)
+
+    updated_game = Map.update!(state, :guessed, &(&1 ++ [guess]))
+
     if Enum.member?(word, guess) do
-      # guessed right logic
+      current_word = String.codepoints(word_as_string(updated_game, false))
+      if Enum.member?(current_word, "_") do
+        status = :good_guess
+      else
+        status = :won
+      end
     else
-      Map.get_and_update(state, :guessed, &(&1 ++ [guess]))
+      updated_game = Map.update!(updated_game, :turns_left, &(&1 - 1))
+      if Map.get(updated_game, :turns_left) == 0 do
+        status = :lost
+      else
+        status = :bad_guess
+      end
     end
-    Map.get_and_update(state, :turns_left, &(&1 - 1))
+    {updated_game, status, guess}
   end
 
 
