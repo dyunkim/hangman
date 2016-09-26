@@ -1,5 +1,4 @@
 defmodule Hangman.Game do
-
   @moduledoc """
 
   This is the backend for a Hangman game. It manages the game state.
@@ -65,9 +64,9 @@ defmodule Hangman.Game do
      * `:bad_guess` — the word does not contain the guess. The number
        of turns left has been reduced by 1
 
-## Example of use
+  ## Example of use
 
-Here's this module being exercised from an iex session:
+  Here's this module being exercised from an iex session:
 
     iex(1)> alias Hangman.Game, as: G
     Hangman.Game
@@ -107,7 +106,7 @@ Here's this module being exercised from an iex session:
 
     iex(13)> { game, state, guess } = G.make_move(game, "b")
     . . .
-    iex(14)> state                                          
+    iex(14)> state
     :bad_guess
 
     iex(15)> { game, state, guess } = G.make_move(game, "f")
@@ -142,6 +141,11 @@ Here's this module being exercised from an iex session:
 
   @spec new_game :: state
   def new_game do
+    %{
+      word: Hangman.Dictionary.random_word,
+      guessed: [],
+      turns_left: 10,
+    }
   end
 
 
@@ -152,6 +156,11 @@ Here's this module being exercised from an iex session:
   """
   @spec new_game(binary) :: state
   def new_game(word) do
+    %{
+      word: word,
+      guessed: [],
+      turns_left: 10
+    }
   end
 
 
@@ -177,6 +186,13 @@ Here's this module being exercised from an iex session:
 
   @spec make_move(state, ch) :: { state, atom, optional_ch }
   def make_move(state, guess) do
+    word = state.word
+    if Enum.member?(word, guess) do
+      # guessed right logic
+    else
+      Map.get_and_update(state, :guessed, &(&1 ++ [guess]))
+    end
+    Map.get_and_update(state, :turns_left, &(&1 - 1))
   end
 
 
@@ -187,6 +203,7 @@ Here's this module being exercised from an iex session:
   """
   @spec word_length(state) :: integer
   def word_length(%{ word: word }) do
+    String.length(word)
   end
 
   @doc """
@@ -199,6 +216,7 @@ Here's this module being exercised from an iex session:
 
   @spec letters_used_so_far(state) :: [ binary ]
   def letters_used_so_far(state) do
+    Map.get(state, :guessed)
   end
 
   @doc """
@@ -211,6 +229,7 @@ Here's this module being exercised from an iex session:
 
   @spec turns_left(state) :: integer
   def turns_left(state) do
+    state.turns_left
   end
 
   @doc """
@@ -224,6 +243,23 @@ Here's this module being exercised from an iex session:
 
   @spec word_as_string(state, boolean) :: binary
   def word_as_string(state, reveal \\ false) do
+    if reveal do
+      String.codepoints(state.word)
+      |> Enum.join(" ")
+      |> String.trim
+    else
+      split_word = String.codepoints(state.word)
+      guessed = state.guessed
+      Enum.map(split_word, fn(x) ->
+          if Enum.member?(guessed, x) do " " <> x
+          else " _"
+        end
+      end)
+      |> Enum.join
+      |> String.trim
+    end
+
+
   end
 
   ###########################
@@ -232,4 +268,5 @@ Here's this module being exercised from an iex session:
 
   # Your private functions go here
 
- end
+
+end
