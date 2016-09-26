@@ -189,23 +189,39 @@ defmodule Hangman.Game do
     word = String.codepoints(state.word)
 
     updated_game = Map.update!(state, :guessed, &(&1 ++ [guess]))
-
-    if Enum.member?(word, guess) do
-      current_word = String.codepoints(word_as_string(updated_game, false))
-      if Enum.member?(current_word, "_") do
-        status = :good_guess
-      else
-        status = :won
-      end
-    else
-      updated_game = Map.update!(updated_game, :turns_left, &(&1 - 1))
-      if Map.get(updated_game, :turns_left) == 0 do
-        status = :lost
-      else
-        status = :bad_guess
-      end
+    status =
+      case Enum.member?(word, guess) do
+        true ->
+          current_word = String.codepoints(word_as_string(updated_game, false))
+          case Enum.member?(current_word, "_") do
+            true -> :good_guess
+            _ -> :won
+          end
+        false ->
+          updated_game = Map.update!(updated_game, :turns_left, &(&1 - 1))
+          case Map.get(updated_game, :turns_left) do
+             0 -> :lost
+             _ -> :bad_guess
+          end
     end
     {updated_game, status, guess}
+
+    # if Enum.member?(word, guess) do
+    #   current_word = String.codepoints(word_as_string(updated_game, false))
+    #   if Enum.member?(current_word, "_") do
+    #     status = :good_guess
+    #   else
+    #     status = :won
+    #   end
+    # else
+    #   updated_game = Map.update!(updated_game, :turns_left, &(&1 - 1))
+    #   if Map.get(updated_game, :turns_left) == 0 do
+    #     status = :lost
+    #   else
+    #     status = :bad_guess
+    #   end
+    # end
+    # {updated_game, status, guess}
   end
 
 
